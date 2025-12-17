@@ -20,6 +20,7 @@ import {
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
+import { useFileSearchSettings } from "@/hooks/use-file-search-settings";
 import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import type { Attachment, ChatMessage } from "@/lib/types";
@@ -53,6 +54,13 @@ export function Chat({
     chatId: id,
     initialVisibilityType,
   });
+
+  const { settings: fileSearchSettings } = useFileSearchSettings();
+  const selectedFileSearchStoreRef = useRef(fileSearchSettings.selectedStore);
+
+  useEffect(() => {
+    selectedFileSearchStoreRef.current = fileSearchSettings.selectedStore;
+  }, [fileSearchSettings.selectedStore]);
 
   const { mutate } = useSWRConfig();
 
@@ -100,6 +108,7 @@ export function Chat({
             message: request.messages.at(-1),
             selectedChatModel: currentModelIdRef.current,
             selectedVisibilityType: visibilityType,
+            selectedFileSearchStore: selectedFileSearchStoreRef.current,
             ...request.body,
           },
         };

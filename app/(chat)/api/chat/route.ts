@@ -19,6 +19,10 @@ import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
+import {
+  createFileSearchTool,
+  type FileSearchConfig,
+} from "@/lib/ai/tools/file-search";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
@@ -80,11 +84,13 @@ export async function POST(request: Request) {
       message,
       selectedChatModel,
       selectedVisibilityType,
+      selectedFileSearchStore,
     }: {
       id: string;
       message: ChatMessage;
       selectedChatModel: ChatModel["id"];
       selectedVisibilityType: VisibilityType;
+      selectedFileSearchStore?: string | null;
     } = requestBody;
 
     const session = await auth();
@@ -154,6 +160,17 @@ export async function POST(request: Request) {
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
 
+    // Configure File Search if a store is selected from the client
+    let fileSearchConfig: FileSearchConfig | null = null;
+    if (selectedFileSearchStore) {
+      fileSearchConfig = {
+        fileSearchStoreNames: [selectedFileSearchStore],
+      };
+    }
+
+    // Create file search tool (uses Gemini 2.5 Flash internally)
+    const fileSearchTool = createFileSearchTool(fileSearchConfig);
+
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
         // Handle title generation in parallel
@@ -180,6 +197,7 @@ export async function POST(request: Request) {
                 "createDocument",
                 "updateDocument",
                 "requestSuggestions",
+                ...(fileSearchTool ? (["fileSearch"] as const) : []),
               ],
           experimental_transform: isReasoningModel
             ? undefined
@@ -199,6 +217,8 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
+            // Custom file search tool that uses Gemini 2.5 Flash internally
+            ...(fileSearchTool && { fileSearch: fileSearchTool }),
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

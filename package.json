@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@ai-sdk/gateway": "^2.0.18",
+    "@ai-sdk/google": "^2.0.47",
     "@ai-sdk/provider": "2.0.0",
     "@ai-sdk/react": "2.0.109",
     "@codemirror/lang-javascript": "^6.2.2",
@@ -112,6 +113,7 @@
     "@types/react-dom": "^18",
     "@types/react-syntax-highlighter": "^15.5.13",
     "drizzle-kit": "^0.25.0",
+    "fast-check": "^4.4.0",
     "postcss": "^8",
     "tailwindcss": "^4.1.13",
     "tsx": "^4.19.1",

@@ -55,3 +55,34 @@ export type Attachment = {
   url: string;
   contentType: string;
 };
+
+// Gemini File Search Grounding Metadata Types
+export type GroundingChunk = {
+  retrievedContext: {
+    title: string;
+    text: string;
+    fileSearchStore: string;
+  };
+};
+
+export type GroundingSupport = {
+  segment: {
+    startIndex: number;
+    endIndex: number;
+    text: string;
+  };
+  groundingChunkIndices: number[];
+};
+
+export type GroundingMetadata = {
+  groundingChunks?: GroundingChunk[];
+  groundingSupports?: GroundingSupport[];
+};
+
+export type GoogleProviderMetadata = {
+  google?: {
+    groundingMetadata?: GroundingMetadata;
+    safetyRatings?: unknown;
+    usageMetadata?: unknown;
+  };
+};

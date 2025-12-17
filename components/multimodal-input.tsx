@@ -11,7 +11,6 @@ import {
   type SetStateAction,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -44,6 +43,8 @@ import {
 } from "./elements/prompt-input";
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
 import { PreviewAttachment } from "./preview-attachment";
+import { StoreManagementPanel } from "./store-management-panel";
+import { StoreSelector } from "./store-selector";
 import { SuggestedActions } from "./suggested-actions";
 import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
@@ -86,6 +87,7 @@ function PureMultimodalInput({
   onModelChange?: (modelId: string) => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isStoreManagementOpen, setIsStoreManagementOpen] = useState(false);
   const { width } = useWindowSize();
 
   const adjustHeight = useCallback(() => {
@@ -376,7 +378,15 @@ function PureMultimodalInput({
               onModelChange={onModelChange}
               selectedModelId={selectedModelId}
             />
+            <StoreSelector
+              onManageClick={() => setIsStoreManagementOpen(true)}
+            />
           </PromptInputTools>
+
+          <StoreManagementPanel
+            onOpenChange={setIsStoreManagementOpen}
+            open={isStoreManagementOpen}
+          />
 
           {status === "submitted" ? (
             <StopButton setMessages={setMessages} stop={stop} />

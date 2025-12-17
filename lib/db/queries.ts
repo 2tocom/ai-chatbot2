@@ -28,7 +28,9 @@ import {
   stream,
   suggestion,
   type User,
+  type UserSettings,
   user,
+  userSettings,
   vote,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
@@ -583,6 +585,71 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to get stream ids by chat id"
+    );
+  }
+}
+
+export async function getUserSettings({
+  userId,
+}: {
+  userId: string;
+}): Promise<UserSettings | null> {
+  try {
+    const [settings] = await db
+      .select()
+      .from(userSettings)
+      .where(eq(userSettings.userId, userId));
+
+    return settings ?? null;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get user settings"
+    );
+  }
+}
+
+export async function upsertUserSettings({
+  userId,
+  fileSearchStoreNames,
+  fileSearchTopK,
+  selectedStore,
+}: {
+  userId: string;
+  fileSearchStoreNames?: string[];
+  fileSearchTopK?: number | null;
+  selectedStore?: string | null;
+}) {
+  try {
+    const existing = await getUserSettings({ userId });
+
+    if (existing) {
+      return await db
+        .update(userSettings)
+        .set({
+          ...(fileSearchStoreNames !== undefined && { fileSearchStoreNames }),
+          ...(fileSearchTopK !== undefined && { fileSearchTopK }),
+          ...(selectedStore !== undefined && { selectedStore }),
+          updatedAt: new Date(),
+        })
+        .where(eq(userSettings.userId, userId))
+        .returning();
+    }
+
+    return await db
+      .insert(userSettings)
+      .values({
+        userId,
+        fileSearchStoreNames: fileSearchStoreNames ?? [],
+        fileSearchTopK,
+        selectedStore: selectedStore ?? null,
+        updatedAt: new Date(),
+      })
+      .returning();
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to upsert user settings"
     );
   }
 }
